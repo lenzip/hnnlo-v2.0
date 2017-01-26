@@ -1,0 +1,2 @@
+double precision mtop,mbot 
+common/tbmass/mtop,mbot

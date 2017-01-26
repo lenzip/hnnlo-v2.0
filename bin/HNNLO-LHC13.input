@@ -1,0 +1,16 @@
+13000   ! sroot
+1 1  ! ih1 ih2
+MASS   ! hmass (hnnlo then gives Gamma_H = 0.004221 GeV)
+SCALE SCALE ! mur,muf
+2               ! order
+2               ! higgsdec
+'tota'          ! part
+15 500000  ! itmx1, ncall1
+30 700000  ! itmx2, ncall2
+SEED ! rseed
+92 0            ! iset, nset
+172.5d0         ! mtop
+4.75d0          ! mbot
+2               ! approxim
+'MSTW2008nnlo68cl.LHgrid' 0  ! set, member (LHAPDFs)
+'HNNLO-MASS-SCALE-SCALE-SEED' ! runstring

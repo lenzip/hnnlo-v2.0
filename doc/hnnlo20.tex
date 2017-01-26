@@ -1,0 +1,347 @@
+\documentclass[12pt]{article}
+\usepackage{latexsym}
+\usepackage{amssymb}
+
+\textwidth=6.2in
+\textheight=9.5in
+\voffset=-0.5in
+\hoffset=-0.5in
+
+\def\ltap{\raisebox{-.6ex}{\rlap{$\,\sim\,$}} \raisebox{.4ex}{$\,<\,$}} 
+\def\gtap{\raisebox{-.6ex}{\rlap{$\,\sim\,$}} \raisebox{.4ex}{$\,>\,$}} 
+\newcommand\as{\alpha_{\mathrm{S}}} 
+
+\begin{document}
+\vspace*{1cm}
+\begin{center}
+{\Large \bf HNNLO version 2.0}
+\end{center}
+\par \vspace{2mm}
+\begin{center}
+
+
+\vspace{12mm}
+
+
+
+\begin{quote}
+\pretolerance 10000
+
+This is a note about the HNNLO program.
+HNNLO is a parton level Monte Carlo program
+that computes the cross section for 
+SM Higgs boson production in $pp$ and $p{\bar p}$ collisions.
+The calculation is performed
+up to NNLO in QCD perturbation theory.
+The present version includes the decay modes
+$H\to \gamma\gamma$, $H\to WW\to l\nu l\nu$ and $H\to ZZ\to$ 4 leptons.
+The user is allowed to apply arbitrary cuts on the final state and to plot the corresponding distributions in the form of bin histograms.
+If you use this program, please quote
+Refs.~\cite{Catani:2007vq,Grazzini:2008tf,Grazzini:2013mca}.
+
+
+\end{quote}
+\end{center}
+
+\section{Introduction}
+
+The HNNLO program is based on an extension of the subtraction formalism to NNLO,
+as described in Ref.~\cite{Catani:2007vq}.
+
+The calculation is organized in two parts. In the first part (virtual), the contribution of the regularized virtual corrections (up to two-loop order) is computed.
+In the second part (real), the cross section for the production of 
+the Higgs boson in association with one jet is first evaluated up to NLO (i.e. up to ${\cal O}(\as^4)$).
+This step of the calculation can be performed with any available version of the subtraction method.
+Here we use the dipole formalism \cite{Catani:1996jh}, as implemented in the MCFM Monte Carlo program \cite{mcfm}.
+Since the $H+{\rm jet}$ cross section is divergent when the transverse momentum $q_T$ of
+the Higgs boson becomes small, a suitable counterterm must be subtracted
+to make the result finite as $q_T\to 0$.
+The program uses the counterterm introduced in Ref.~\cite{Catani:2007vq},
+and thus it completes the evaluation of the real part.
+Finally, the two contributions (virtual and real) can be combined to reconstruct the full cross section.
+
+The calculation can be performed
+by using the large-$M_{t}$ approximation, $M_t$ being the
+mass of the top quark, or by keeping the exact dependence of the top- and bottom-quark masses up to NLO \cite{Grazzini:2013mca}.
+NNLO effects are always evaluated in the large-$M_t$ limit, by rescaling the corresponding ${\cal O}(\as^4)$ contribution with the exact top-mass dependence at Born level.
+
+
+The present version of the program includes the decay modes
+$H\to \gamma\gamma$ \cite{Catani:2007vq}, $H\to WW\to l\nu l\nu$ and $H\to ZZ\to$ 4 leptons \cite{Grazzini:2008tf}.
+In the latter case the user can choose between $H\to ZZ\to \mu^+\mu^- e^+e^-$ and $H\to ZZ\to e^+e^-e^+e^-$, which includes the appropriate interference contribution.
+
+
+The program treats the Higgs boson in the narrow width approximation. In the decay modes
+$H\to WW\to l\nu l\nu$ and $H\to ZZ\to$ 4 leptons,
+the finite width of the $W$ and $Z$ bosons is instead taken into account.
+
+The program can be downloaded from {\tt http://theory.fi.infn.it/grazzini}.
+To extract it, simply use {\tt tar -xzvf hnnlo-v2.0.tgz} and the {\tt hnnlo-v2.0} directory will be created.
+The structure of the directory is
+\begin{itemize}
+\item {\tt bin}: The directory containing the executable {\tt hnnlo} and the input and output files.
+\item {\tt doc}: The directory containing this note.
+\item {\tt obj}: The directory containing the object files.
+\item {\tt src}: The directory containing the source of the code.
+\end{itemize}
+
+In the present version of the code
+we offer the possibility to use the program with the 
+Les Houches Accord PDF (LHAPDF) interface.
+To do so, the user should set the variable 
+{\tt PDFROUTINES=LHAPDF} in the makefile and
+{\tt LHAPDFLIB} to the path of the LHAPDF library.
+
+
+\section{Implementation of cuts}
+
+Before compiling the program, the user must choose the cuts
+to apply on the final state.
+This is done through the {\tt cuts} and {\tt isolation} subroutines.
+The default version of the subroutine {\tt cuts} contains selection cuts that are used in the search for the Higgs boson at the LHC.
+In the default version, the lines of the code implementing the various cuts are all commented, thus the program will return the total cross section for the selected decay channel. Since the computation is performed in the narrow-width approximation, this will correspond
+to the total cross section $gg\to H$ times the branching ratio in the corresponding channel.
+
+In order to activate the various cuts the user must uncomment the corresponding lines in {\tt cuts.f}.
+Photon or lepton isolation can be implemented by switching to {\tt true} the logical variable {\tt isol}.
+The parameters to define the isolation procedure are set in the {\tt isolation} subroutines.
+
+Beside the leptons (photons) the program makes possible to identify the final state jets.
+Jets are reconstructed according to the $k_T$ algorithm with $R=0.4$.
+Different values of $R$ can be implemented by modifying the {\tt setup} subroutine\footnote{Up to NNLO the $k_T$ and anti-$k_T$ algorithms are equivalent in this case.}.
+
+Both {\tt cuts.f} and {\tt isolation.f} can be found in
+the {\tt /src/User} directory. The {\tt setup.f} source file can be found in the {\tt /src/Need} directory.
+
+
+\section{Compilation}
+
+The program is self-contained and it has been successfully
+tested on Linux and Mac-OS X environments.
+To compile the code descend in the {\tt hnnlo} directory and simply type
+\begin{itemize}
+\item {\tt make}
+\end{itemize}
+To run it go in the {\tt bin} directory and type:
+\begin{itemize}
+\item {\tt hnnlo < infile}
+\end{itemize}
+
+\section{The input file}
+
+This is a typical example of input file:
+\vskip .5cm
+
+\begin{tt}
+\noindent
+8d3 ! sroot\\
+1 1 !ih1 ih2 \\
+125d0 ! hmass\\
+125d0 125d0 ! mur, muf\\
+2 ! order\\
+1 ! higgsdec\\
+'tota' ! part\\
+15 8000000 ! itmx1, ncall1\\
+30 8000000 ! itmx2, ncall2\\
+617 ! rseed\\
+92 0 ! iset, nset\\
+172.5d0 ! mtop\\
+4.75d0 ! mbot\\
+2 ! approxim\\
+'MSTW2008nnlo68cl.LHgrid' 0 ! set, member (LHAPDFs) \\
+'nnlo' ! runstring\\
+
+\end{tt}
+
+\begin{itemize}
+\item {\tt sroot}: Double precision variable for CM energy (GeV).
+\item {\tt ih1,ih2}: Integers identifying the beam (proton=1, antiproton=-1)
+\item {\tt hmass}: Higgs boson mass (GeV). This is a double precision variable that sets
+the mass of the SM Higgs boson;
+\item {\tt mur, muf}: Renormalization and factorization scales (GeV): can be be different from each other but always of order $M_H$.
+\item {\tt order}: Integer setting the order of the calculation: LO (0), NLO (1), NNLO (2).
+\item {\tt higgsdec}: Decay mode of the Higgs: $H\to\gamma\gamma$ (1), $H\to WW\to l\nu l\nu$ (2), $H\to ZZ\to e^+e^-\mu^+\mu^-$ (31),
+$H\to ZZ\to e^+e^-e^+e^-$ (32).
+\item {\tt part}: String identifying the part of the calculation to be performed: {\tt virt} for virtual contribution, {\tt real} for real contribution, {\tt tota} for the complete calculation.
+\item {\tt itmx1, ncall1}: Number of iterations and calls to vegas for setting the grid.
+\item {\tt itmx2, ncall2}: Number of iterations and calls to vegas for the main run.
+\item {\tt rseed}: Random number seed.
+\item {\tt iset, nset}: Integers identifying the pdf set chosen and the eigenvector for computing PDF errors (if the native PDF interface is used).
+A list of available pdf is given below.
+\item {\tt mtop}: Mass of the top-quark (GeV)
+\item {\tt mbot}: Mass of the bottom-quark (GeV)
+\item {\tt approxim}: Integer defining the approximation to be used: large-$M_t$ approximation (0), exact dependence on $M_t$ up to NLO (1), exact dependence on $M_t$ and $M_b$ up to NLO (2).
+\item {\tt PDFname, PDFmember}: String identifying the PDF set chosen and integer identifying the member for PDF 
+errors (if the LHAPDF interface is used).
+\item {\tt runstring}: String for grid and output files.
+\end{itemize}
+
+
+
+\section{Output}
+
+At the end of the run, the program returns the cross section and its error.
+The program also writes an output file in the topdrawer format
+containing the required histograms with an estimate of the corresponding
+statistical errors. During the run, the user can control
+the intermediate results.
+The plots are defined in the {\tt plotter} subroutine.
+The user can easily modify this subroutine according to his/her needs.
+
+To obtain a cross section accurate at the percent level at NLO typically
+requires about one hour of run on a standard PC.
+At NNLO the required run time is at least about a factor of 10 larger.
+
+
+\section{Parton distributions}
+
+The {\tt HNNLO} program can be compiled with its own Parton Distribution
+Functions (PDF) interface (set {\tt PDFROUTINES = NATIVE}~ in the 
+{\tt makefile}) 
+or with the LHAPDF interface 
+(set {\tt PDFROUTINES = LHAPDF} ~in the {\tt makefile}).
+We point out that the value of $\alpha_S(m_Z)$ is not adjustable; it is hard-wired with the
+value of $\alpha_S(m_Z)$ in the parton distributions.
+Moreover, the choice of the parton distributions also specifies
+the number of loops that should be used in the running of $\alpha_S$.
+A list of available parton densities for the native PDF interface is given 
+in Table 1.
+
+When dealing with PDF uncertainties,
+the {\tt nset} variable is used to distinguish the PDF grids corresponding
+to different eigenvectors.
+When CTEQ6.6M partons are used, {\tt nset} varies in the range {\tt nset=0,44}.
+When NNPDF2.0\_100 partons are used, {\tt nset} varies in the range {\tt nset=0,100}.
+When MSTW2008 partons are used, {\tt nset} varies in the range {\tt nset=0,40} and the uncertainties we consider are those at 68\% CL.
+When GJR08VF NLO or JR09VF NNLO partons are used, the {\tt nset} variable should
+be in the range {\tt nset=-13,13}.
+For A06 (ABKM09) NNLO partons, the variable {\tt nset}
+should vary in the range {\tt nset=0,23} ({\tt nset=0,25}).
+The default choice is {\tt nset=0}, corresponding to the central set. 
+The variable {\tt nset} is dummy when other PDF sets are used.
+
+\section{From Version 1.3 to 2.0}
+
+The main change in version 2.0 of the program is that the exact dependence on the masses of the top and bottom quarks up to NLO has been implemented. This is done by using the exact two-loop matrix element for $gg\to H$ \cite{Spira:1995rr}, and the exact one loop amplitudes for the real emission \cite{Ellis:1987xu}. More details on the implementation of mass effects can be found in Ref.~\cite{Grazzini:2013mca}.
+
+\vskip .5cm
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|c|l|c|}
+\hline
+{\tt iset} & Pdf set &$\as(M_Z)$\\
+\hline
+\hline
+1 & CTEQ4 LO  &  0.132\\
+2 &CTEQ4 Standard NLO &  0.116\\
+\hline
+11 & MRST98 NLO central gluon & 0.1175\\
+12 & MRST98 NLO higher gluon & 0.1175\\
+13 & MRST98 NLO lower gluon & 0.1175\\
+14 & MRST98 NLO lower $\as$ & 0.1125\\
+15 & MRST98 NLO higher $\as$ & 0.1225\\
+16 & MRST98 LO & 0.125\\
+\hline
+21 & CTEQ5M NLO Standard Msbar &  0.118\\ 
+22 & CTEQ5D NLO DIS &  0.118\\
+23 & CTEQ5L LO & 0.127\\
+24 & CTEQ5HJ NLO Large-x gluon enhanced& 0.118\\
+25 & CTEQ5HQ NLO Heavy Quark & 0.118\\
+28 & CTEQ5M1 NLO Improved & 0.118\\
+29 & CTEQ5HQ1 NLO Improved & 0.118\\
+\hline
+30 & MRST99 NLO & 0.1175\\
+31 & MRST99 higher gluon & 0.1175       \\
+32 & MRST99 lower gluon & 0.1175       \\
+33 & MRST99 lower $\as$ & 0.1125       \\    
+34 & MRST99 higher $\as$ & 0.1225       \\
+\hline
+41 & MRST2001 NLO central gluon & 0.119\\
+42 & MRST2001 NLO lower $\as$ & 0.117\\
+43 & MRST2001 NLO higher $\as$ & 0.121\\
+44 & MRST2001 NLO better fit to jet data & 0.121\\
+45 & MRST2001 NNLO & 0.1155\\
+46 & MRST2001 NNLO fast evolution & 0.1155\\
+47 & MRST2001 NNLO slow evolution & 0.1155\\
+48 & MRST2001 NNLO better fit to jet data & 0.1180\\
+\hline
+51 & CTEQ6L LO &  0.118         \\
+52 & CTEQ6L1 LO &  0.130        \\
+53 & CTEQ6M NLO &  0.118       \\
+\hline
+49 & MRST2002 LO & 0.130        \\
+61 & MRST2002 NLO & 0.1197       \\
+62 &MRST2002 NNLO & 0.1154       \\
+\hline
+71 & MRST2004 NLO & 0.1205       \\
+72 & MRST2004 NNLO & 0.1167       \\
+\hline
+90 & MSTW2008 LO & 0.13939       \\
+91 & MSTW2008 NLO & 0.12018      \\
+92 & MSTW2008 NNLO & 0.11707  \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Available pdf sets and their corresponding {\tt iset} and values of
+$\alpha_S(M_Z)$.}
+\label{pdlabel}
+\end{table}
+
+
+\begin{thebibliography}{99}
+%\cite{Catani:2007vq}
+\bibitem{Catani:2007vq}
+  S.~Catani and M.~Grazzini,
+  %``An NNLO subtraction formalism in hadron collisions and its application   to
+  %Higgs boson production at the LHC,''
+  Phys.\ Rev.\ Lett.\  {\bf 98} (2007) 222002.
+%[arXiv:hep-ph/0703012].
+%%CITATION = PRLTA,98,222002;%%
+
+%\cite{Grazzini:2008tf}
+\bibitem{Grazzini:2008tf}
+  M.~Grazzini,
+  %``NNLO predictions for the Higgs boson signal in the H ---> WW ---> lnu lnu and H ---> ZZ ---> 4l decay channels,''
+  JHEP {\bf 0802} (2008) 043.
+%[arXiv:0801.3232 [hep-ph]].
+  %%CITATION = ARXIV:0801.3232;%%
+  %113 citations counted in INSPIRE as of 28 Jun 2013
+
+%\cite{Grazzini:2013mca}
+\bibitem{Grazzini:2013mca}
+  M.~Grazzini and H.~Sargsyan,
+  %``Heavy-quark mass effects in Higgs boson production at the LHC,''
+  arXiv:1306.4581 [hep-ph].
+  %%CITATION = ARXIV:1306.4581;%%
+
+\bibitem{Catani:1996jh}
+  S.~Catani and M.~H.~Seymour,
+  %``The Dipole Formalism for the Calculation of QCD Jet Cross Sections at
+  %Next-to-Leading Order,''
+  Phys.\ Lett.\  B {\bf 378} (1996) 287,
+%[arXiv:hep-ph/9602277].
+%%CITATION = PHLTA,B378,287;%%
+Nucl.\ Phys.\  B {\bf 485} (1997) 291
+[Erratum-ibid.\  B {\bf 510} (1998) 503].
+%%CITATION = NUPHA,B485,291;%%
+\bibitem{mcfm}
+J.~Campbell, R.K.~Ellis, {\em MCFM - Monte Carlo for FeMtobarn processes}, {\tt http://mcfm.fnal.gov}
+
+%\cite{Spira:1995rr}
+\bibitem{Spira:1995rr}
+  M.~Spira, A.~Djouadi, D.~Graudenz and P.~M.~Zerwas,
+  %``Higgs boson production at the LHC,''
+  Nucl.\ Phys.\ B {\bf 453} (1995) 17
+  [hep-ph/9504378].
+  %%CITATION = HEP-PH/9504378;%%
+
+%\cite{Ellis:1987xu}
+\bibitem{Ellis:1987xu}
+  R.~K.~Ellis, I.~Hinchliffe, M.~Soldate and J.~J.~van der Bij,
+  %``Higgs Decay to tau+ tau-: A Possible Signature of Intermediate Mass Higgs Bosons at the SSC,''
+  Nucl.\ Phys.\ B {\bf 297} (1988) 221.
+  %%CITATION = NUPHA,B297,221;%%
+
+
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,177 @@
+      subroutine bookplot(n,tag,titlex,var,wt,xmin,xmax,dx,llplot) 
+      implicit none
+      include 'nplot.f'
+      integer n,higgsdec
+      character*(*) titlex
+      character*3 llplot
+      character*4 tag,mypart
+      double precision var,wt,xmin,xmax,dx
+      common/mypart/mypart
+
+      if (tag.eq.'book') then
+          call mbook(n,titlex,dx,xmin,xmax)
+          call mbook(20+n,titlex,dx,xmin,xmax)
+          call mbook(40+n,titlex,dx,xmin,xmax)
+          call mbook(60+n,titlex,dx,xmin,xmax)
+          call mbook(80+n,titlex,dx,xmin,xmax)
+          call mbook(100+n,titlex,dx,xmin,xmax)
+          call mbook(120+n,titlex,dx,xmin,xmax)
+      elseif (tag .eq. 'plot') then
+          call mfill(n,var,wt)
+        linlog(n)=llplot
+        titlearray(n)=titlex
+      endif
+
+      return
+      end
+
+    
+      subroutine plotter(p,wt,switch)
+      implicit none
+      include 'clustering.f'
+      include 'constants.f'
+      include 'cutoff.f'
+      include 'jetlabel.f'
+      include 'npart.f'
+      include 'mxdim.f'
+      include 'process.f'
+      include 'removebr.f'
+      include 'masses.f'
+
+      integer n,switch,nplotmax
+      character tag*4
+  
+      double precision dot
+      double precision wt
+      double precision p(mxpart,4)
+      double precision pt,yraptwo,pttwo
+      integer eventpart
+
+      logical first,jetmerge
+      common/nplotmax/nplotmax
+      common/jetmerge/jetmerge
+      integer order,higgsdec,ndec
+      common/higgsdec/higgsdec,ndec
+      common/nnlo/order
+      data first/.true./
+      save first
+
+      double precision yh,pth
+      double precision HT,ptj1,ptj2,pjm
+      double precision HT_exp,pth_exp,ptj1_exp
+      double precision HT_min,pth_min,ptj1_min
+      double precision HT_hfact(4)
+      double precision pth_hfact(4)
+      double precision ptj1_hfact(4)
+      double precision damping
+      double precision xjets
+      double precision mjj,detajj
+      double precision etarap
+
+      wt=wt  !  Convert to Powheg-Box units.
+
+      if (first) then
+         tag='book'
+c--- ensure we initialize all possible histograms
+         eventpart=npart+3
+         
+         yh=0d0
+         pth=0d0
+         HT=0d0
+         ptj1=0d0
+         ptj2=0d0
+         
+         jetmerge=.true.
+CC      Here set jets to the maximum number of jets 
+CC      to book the necessary histograms: 0 at LO, 1 at NLO and 2 at NNLO
+         jets=order
+CC
+         goto 99
+      else
+         tag='plot'
+      endif
+
+C - Damping factors.
+C - These are generically defined as
+C - damping=(X_hfact-Xmin)^X_exp/((X_hfact-Xmin)^X_exp+(X-Xmin)^X_exp)
+C - where X refers to some kinematic variable e.g. HT, pth, ptj1,
+C - which typically increases with increasing hardness of radiation
+C - in the event. Xmin is the minimum value kinematically accessible
+C - to X. So damping --->1 for soft events and damping ---> 0 for
+C - hard events. 
+
+ 99   continue
+      n=1                  
+      
+      xjets=DBLE(jets)
+C - Order the jets
+      if(jets.eq.2) then
+         ptj1=pt(7,p)
+         ptj2=pt(8,p)
+         if(ptj1.lt.ptj2) then
+            pjm=ptj2
+            ptj2=ptj1
+            ptj1=pjm
+         endif
+      elseif(jets.eq.1) then
+         ptj1=pt(7,p)
+         ptj2=0d0
+      elseif(jets.eq.0) then
+         ptj1=0d0
+         ptj2=0d0
+      endif
+     
+
+      mjj=-1d0
+      detajj=-1d0
+      if (xjets.ge.2d0) then
+        mjj=dsqrt((p(7,4)+p(8,4))**2
+     &    -(p(7,1)+p(8,1))**2
+     &    -(p(7,2)+p(8,2))**2
+     &    -(p(7,3)+p(8,3))**2)
+        detajj=dabs(etarap(7,p)-etarap(8,p))
+      endif
+
+
+      call bookplot(n,tag,'mjj',mjj,wt,0d0,5000d0, 100d0,'lin')
+      n=n+1
+      call bookplot(n,tag,'detajj',detajj,wt,0d0,10d0, 1d0,'lin')
+      n=n+1
+c events in the VBF category appear as events with 3 jets in the plot      
+c events with two non VBF jets end up with 2 jets in the plot
+      if (xjets.ge.2d0) then
+       if ((mjj.gt.500d0).and.(detajj.gt.3.5d0)) then
+          xjets=3d0
+       endif
+      endif
+
+C - ptj1
+      call bookplot(n,tag,'ptj1',ptj1,wt,0d0,300d0,3d0,'lin')
+      n=n+1
+C - ptj2
+      call bookplot(n,tag,'ptj2',ptj2,wt,0d0,300d0,3d0,'lin')
+      n=n+1
+C - jets      
+      call bookplot(n,tag,'category',xjets,wt,-0.5d0,3.5d0,1d0,'lin')
+      n=n+1
+
+      n=n-1
+
+      if (n.gt.20) then
+        write(6,*) 'WARNING - TOO MANY HISTOGRAMS!'
+        write(6,*) n,' > 20, which is the built-in maximum'
+        stop
+      endif
+
+c--- set the maximum number of plots, on the first call
+      if (first) then
+        first=.false.
+        nplotmax=n
+      endif
+      
+
+      return 
+      end
+      
+
+      
